@@ -7,18 +7,20 @@ use App\Form\NewsType;
 use App\Repository\NewsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/news')]
+#[Route('/profile/news')]
 final class NewsController extends AbstractController
 {
     #[Route('/', name: 'app_news_index', methods: ['GET'])]
     public function index(NewsRepository $newsRepository): Response
     {
         return $this->render('news/index.html.twig', [
-            'news' => $newsRepository->findAll(),
+            'news' => $newsRepository->findBy(['author' => $this->getUser()]),
         ]);
     }
 
@@ -26,16 +28,39 @@ final class NewsController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $news = new News();
+
+        $user = $this->getUser();
+        if ($user) {
+            $news->setAuthor($user);
+        } else {
+            throw $this->createAccessDeniedException('You must be logged in to add news.');
+        }
+
         $form = $this->createForm(NewsType::class, $news);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            /** @var UploadedFile $file */
+            $file = $form->get('image')->getData();
+
+            if ($file) {
+                $newFilename = uniqid().'.'.$file->guessExtension();
+
+                try {
+                    $file->move(
+                        $this->getParameter('image_directory'), // шлях до папки для зображень
+                        $newFilename
+                    );
+                } catch (FileException $e) {
+                }
+                $news->setImagePath($newFilename); // зберігаємо шлях до зображення
+            }
             $entityManager->persist($news);
             $entityManager->flush();
 
             return $this->redirectToRoute('app_news_index', [], Response::HTTP_SEE_OTHER);
         }
-
         return $this->render('news/new.html.twig', [
             'news' => $news,
             'form' => $form,

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}News index{% endblock %}
+
+{% block body %}
+    <h1>Frontpage</h1>
+    <h2>All News</h2>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Author</th>
+            <th>Title</th>
+            <th>Content</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for news in news %}
+            <div>
+                <div>{{ news.author.email }}</div>
+                <div>{{ news.title }}</div>
+                <div>{{ news.content }}</div>
+                {% if news.imagePath %}
+                    <img src="{{ asset('uploads/images/' ~ news.imagePath) }}" alt="{{ news.title }}">
+                {% endif %}
+            </div>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if user is null %}
+        <a href="{{ path('app_login') }}">Login</a>
+        <a href="{{ path('app_news_new') }}">Register</a>
+    {% else %}
+        <a href="{{ path('app_news_new') }}">Create new</a>
+        <a href="{{ path('app_news_index') }}">Manage my news</a>
+    {% endif %}
+{% endblock %}

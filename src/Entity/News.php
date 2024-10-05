@@ -22,6 +22,13 @@ class News
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
+    #[ORM\ManyToOne(inversedBy: 'user_news')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $author = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imagePath = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -48,6 +55,29 @@ class News
     {
         $this->content = $content;
 
+        return $this;
+    }
+
+    public function getAuthor(): ?User
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?User $author): static
+    {
+        $this->author = $author;
+
+        return $this;
+    }
+
+    public function getImagePath(): ?string
+    {
+        return $this->imagePath;
+    }
+
+    public function setImagePath(?string $imagePath): static
+    {
+        $this->imagePath = $imagePath;
         return $this;
     }
 }
